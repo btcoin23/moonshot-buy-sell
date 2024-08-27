@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2020",                                  /* Match target language version */
+    "module": "commonjs",                                /* Specify what module code is generated. */
+    "resolveJsonModule": true,                           /* Enable importing .json files. */
+
+    /* Modules */
+    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. */
+    "skipLibCheck": true,                                /* Skip type checking all .d.ts files. */
+    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
+
+    /* Output */
+    "outDir": "./dist",                                  /* Specify an output folder for all emitted files. */
+  },
+  "include": ["src/**/*", "server.ts"]
+}
