@@ -1,5 +1,5 @@
 import * as readline from "readline";
-import { swapMoonShot } from "./src/moonshotSwap";
+import { buyMoonShot } from "./src/moonshotSwap";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -13,7 +13,7 @@ function askQuestion(query: string): Promise<string> {
 async function main() {
   try {
     const ca = await askQuestion("Please insert Moonshot token CA: ");
-    await swapMoonShot(ca);
+    await buyMoonShot(ca);
     console.log("🎉 Done!");
     rl.close();
   } catch (err) {

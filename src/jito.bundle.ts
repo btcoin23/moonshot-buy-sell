@@ -43,14 +43,14 @@ export class JitoBundleService {
     const _region = regions[idx];
     this.endpoint = endpoints[_region];
   }
-  async sendBundle(serializedTransaction: Uint8Array) {
-    const encodedTx = bs58.encode(serializedTransaction);
-    const jitoURL = `${this.endpoint}/api/v1/bundles`; // ?uuid=${JITO_UUID}
+  async sendBundle(rawTxns: Uint8Array[]) {
+    const encodedTxns = rawTxns.map(raw => bs58.encode(raw));
+    const jitoURL = `${this.endpoint}/api/v1/bundles`;
     const payload = {
       jsonrpc: "2.0",
       id: 1,
       method: "sendBundle",
-      params: [[encodedTx]],
+      params: [[...encodedTxns]],
     };
 
     try {
@@ -63,6 +63,7 @@ export class JitoBundleService {
       return null;
     }
   }
+
   async sendTransaction(serializedTransaction: Uint8Array) {
     const encodedTx = bs58.encode(serializedTransaction);
     const jitoURL = `${this.endpoint}/api/v1/transactions`; // ?uuid=${JITO_UUID}
