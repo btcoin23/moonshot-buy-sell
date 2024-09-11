@@ -11,11 +11,7 @@ export const buyAmount = 1 * LAMPORTS_PER_SOL;
 export const tipAcc = new PublicKey('96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5');
 
 // Add your private keys here. Make sure they have sufficient SOL balance.
-// Maximum wallet size: 15
+// Maximum wallet size: 6
 export const wallets: string[] = [
-    '',
-    '',
-    '',
-    '',
-    '',
+    '64Tr...ZCFx',
 ]

@@ -16,6 +16,7 @@ import {
   tipAcc,
   jitoTip,
   buyAmount,
+  slippage,
 } from "../config";
 import { JitoBundleService } from "./jito.bundle";
 
@@ -30,7 +31,7 @@ export const buyMoonShot = async (mint: string) => {
     const isLastTxn = wallets.length - i <= chunk;
     const buyInstructions: TransactionInstruction[] = [];
     const lookupTableAccounts: AddressLookupTableAccount[] = [];
-    for (let j = i; j < chunk; j++) {
+    for (let j = i; j < Math.min(wallets.length, (i + chunk)); j++) {
       const keypair = Keypair.fromSecretKey(bs58.decode(wallets[j]));
       const solBal = await connection.getBalance(keypair.publicKey);
       if (solBal < buyAmount + jitoTip)
@@ -42,7 +43,8 @@ export const buyMoonShot = async (mint: string) => {
         const { txnIns, luts } = await jupiterSwap(
           keypair.publicKey.toBase58(),
           mint,
-          buyAmount
+          buyAmount,
+          slippage
         );
         // console.log({txnIns});
         buyInstructions.push(...txnIns);
@@ -57,6 +59,7 @@ export const buyMoonShot = async (mint: string) => {
         lamports: jitoTip,
       });
       buyInstructions.push(jitoTipIns);
+      console.log('- Jito tip is added;');
     }
 
     const messageV0 = new TransactionMessage({
@@ -68,26 +71,27 @@ export const buyMoonShot = async (mint: string) => {
     const txn = new VersionedTransaction(messageV0);
 
     txn.sign([tipKeypair]);
+    // const { value: simulatedTransactionResponse } =
+    // await connection.simulateTransaction(txn, {
+    //   replaceRecentBlockhash: true,
+    //   commitment: "processed",
+    // });
+    // const { err, logs } = simulatedTransactionResponse;
+
+    // console.log("🚀 Simulate ~", Date.now());
+
+    // if (err) {
+    //   console.error("Simulation Error:");
+    //   console.error({ err, logs });
+    //   return;
+    // }
     const serializeTxBytes = txn.serialize();
 
     console.log("Txn size:", serializeTxBytes.length);
 
     rawTxns.push(serializeTxBytes);
   }
-  // const { value: simulatedTransactionResponse } =
-  //   await connection.simulateTransaction(txn, {
-  //     replaceRecentBlockhash: true,
-  //     commitment: "processed",
-  //   });
-  // const { err, logs } = simulatedTransactionResponse;
-
-  // console.log("🚀 Simulate ~", Date.now());
-
-  // if (err) {
-  //   console.error("Simulation Error:");
-  //   console.error({ err, logs });
-  //   return;
-  // }
+  
 
   const jitoBundleInstance = new JitoBundleService();
   const bundleId = await jitoBundleInstance.sendBundle(rawTxns);
@@ -102,13 +106,14 @@ export const buyMoonShot = async (mint: string) => {
 export const jupiterSwap = async (
   wallet: string,
   mint: string,
-  amount: number
+  amount: number,
+  slippage: number = 100
 ): Promise<{
   txnIns: TransactionInstruction[];
   luts: AddressLookupTableAccount[];
 }> => {
   try {
-    const url = `https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112\&outputMint=${mint}\&amount=${amount}\&slippageBps=10000`;
+    const url = `https://quote-api.jup.ag/v6/quote?inputMint=So11111111111111111111111111111111111111112\&outputMint=${mint}\&amount=${amount}\&slippageBps=${slippage * 100}`;
     // console.log({ url });
     const quoteResponse = await (await fetch(url)).json();
     //   console.log({ quoteResponse });
@@ -191,19 +196,6 @@ export const jupiterSwap = async (
     return await jupiterSwap(wallet, mint, amount);
   }
 };
-
-function getSignature(transaction: Transaction | VersionedTransaction): string {
-  const signature =
-    "signature" in transaction
-      ? transaction.signature
-      : transaction.signatures[0];
-  if (!signature) {
-    throw new Error(
-      "Missing transaction signature, the transaction was not signed by the fee payer"
-    );
-  }
-  return bs58.encode(signature);
-}
 
 const sleepTime = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
